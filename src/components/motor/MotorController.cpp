@@ -11,21 +11,34 @@ void MotorController::Init() {
 
   shortVib = xTimerCreate("shortVib", 1, pdFALSE, nullptr, StopMotor);
   longVib = xTimerCreate("longVib", pdMS_TO_TICKS(1000), pdTRUE, this, Ring);
+
+  numberVibrations = -1;
+  vibrationCount = 0;
 }
 
 void MotorController::Ring(TimerHandle_t xTimer) {
   auto* motorController = static_cast<MotorController*>(pvTimerGetTimerID(xTimer));
-  motorController->RunForDuration(50);
+  motorController->RunForDuration(50, true);
 }
 
-void MotorController::RunForDuration(uint8_t motorDuration) {
+void MotorController::RunForDuration(uint8_t motorDuration, bool ringMode) {
   if (motorDuration > 0 && xTimerChangePeriod(shortVib, pdMS_TO_TICKS(motorDuration), 0) == pdPASS && xTimerStart(shortVib, 0) == pdPASS) {
     nrf_gpio_pin_clear(PinMap::Motor);
   }
+  // Check if ringing and number of vibrations is provided
+  if (ringMode && numberVibrations > 0) {
+    vibrationCount++;
+    if (vibrationCount >= numberVibrations) {
+      // Stop ringing
+      xTimerStop(longVib, 0);
+    }
+  }
 }
 
-void MotorController::StartRinging() {
-  RunForDuration(50);
+void MotorController::StartRinging(int8_t thisNumberVibrations) {
+  numberVibrations = thisNumberVibrations;
+  vibrationCount = 0;
+  RunForDuration(50, true);
   xTimerStart(longVib, 0);
 }
 
