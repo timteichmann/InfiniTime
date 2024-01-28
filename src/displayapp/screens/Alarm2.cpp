@@ -74,6 +74,11 @@ Alarm2::Alarm2(Controllers::AlarmController2& alarmController2,
   lv_label_set_text_static(colonLabel, ":");
   lv_obj_align(colonLabel, lv_scr_act(), LV_ALIGN_CENTER, 0, -29);
 
+  lv_obj_t* alarmLabel = lv_label_create(lv_scr_act(), nullptr);
+  lv_obj_set_style_local_text_font(alarmLabel, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &jetbrains_mono_bold_20);
+  lv_label_set_text_static(alarmLabel, "A2");
+  lv_obj_align(alarmLabel, lv_scr_act(), LV_ALIGN_CENTER, 0, 50);
+
   btnStop = lv_btn_create(lv_scr_act(), nullptr);
   btnStop->user_data = this;
   lv_obj_set_event_cb(btnStop, btnEventHandler);
@@ -256,13 +261,13 @@ void Alarm2::ShowInfo() {
     auto secToAlarm = timeToAlarm % 60;
 
     lv_label_set_text_fmt(txtMessage,
-                          "Time to\nalarm:\n%2lu Days\n%2lu Hours\n%2lu Minutes\n%2lu Seconds",
+                          "Time to\nalarm 2:\n%2lu Days\n%2lu Hours\n%2lu Minutes\n%2lu Seconds",
                           daysToAlarm,
                           hrsToAlarm,
                           minToAlarm,
                           secToAlarm);
   } else {
-    lv_label_set_text_static(txtMessage, "Alarm\nis not\nset.");
+    lv_label_set_text_static(txtMessage, "Alarm 2\nis not\nset.");
   }
 }
 
