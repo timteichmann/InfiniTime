@@ -40,6 +40,7 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
                        Controllers::Ble& bleController,
                        Controllers::DateTime& dateTimeController,
                        Controllers::AlarmController& alarmController,
+                       Controllers::AlarmController2& alarmController2,
                        Drivers::Watchdog& watchdog,
                        Pinetime::Controllers::NotificationManager& notificationManager,
                        Pinetime::Drivers::Hrs3300& heartRateSensor,
@@ -60,6 +61,7 @@ SystemTask::SystemTask(Drivers::SpiMaster& spi,
     bleController {bleController},
     dateTimeController {dateTimeController},
     alarmController {alarmController},
+    alarmController2 {alarmController2},
     watchdog {watchdog},
     notificationManager {notificationManager},
     heartRateSensor {heartRateSensor},
@@ -126,6 +128,7 @@ void SystemTask::Work() {
   batteryController.Register(this);
   motionSensor.SoftReset();
   alarmController.Init(this);
+  alarmController2.Init(this);
 
   // Reset the TWI device because the motion sensor chip most probably crashed it...
   twiMaster.Sleep();
@@ -245,6 +248,9 @@ void SystemTask::Work() {
           if (alarmController.State() == Controllers::AlarmController::AlarmState::Set) {
             alarmController.ScheduleAlarm();
           }
+          if (alarmController2.State() == Controllers::AlarmController2::AlarmState::Set) {
+            alarmController2.ScheduleAlarm();
+          }
           break;
         case Messages::OnNewNotification:
           if (settingsController.GetNotificationStatus() == Pinetime::Controllers::Settings::Notification::On) {
@@ -261,6 +267,12 @@ void SystemTask::Work() {
             GoToRunning();
           }
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::AlarmTriggered);
+          break;
+        case Messages::SetOffAlarm2:
+          if (state == SystemTaskState::Sleeping) {
+            GoToRunning();
+          }
+          displayApp.PushMessage(Pinetime::Applications::Display::Messages::AlarmTriggered2);
           break;
         case Messages::BleConnected:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
@@ -339,9 +351,11 @@ void SystemTask::Work() {
           break;
         case Messages::OnNewHour:
           using Pinetime::Controllers::AlarmController;
+          using Pinetime::Controllers::AlarmController2;
           if (settingsController.GetNotificationStatus() != Controllers::Settings::Notification::Sleep &&
               settingsController.GetChimeOption() == Controllers::Settings::ChimesOption::Hours &&
-              alarmController.State() != AlarmController::AlarmState::Alerting) {
+              alarmController.State() != AlarmController::AlarmState::Alerting &&
+              alarmController2.State() != AlarmController2::AlarmState::Alerting) {
             // if sleeping, we can't send a chime to displayApp yet (SPI flash switched off)
             // request running first and repush the chime message
             if (state == SystemTaskState::Sleeping) {
@@ -354,9 +368,11 @@ void SystemTask::Work() {
           break;
         case Messages::OnNewHalfHour:
           using Pinetime::Controllers::AlarmController;
+          using Pinetime::Controllers::AlarmController2;
           if (settingsController.GetNotificationStatus() != Controllers::Settings::Notification::Sleep &&
               settingsController.GetChimeOption() == Controllers::Settings::ChimesOption::HalfHours &&
-              alarmController.State() != AlarmController::AlarmState::Alerting) {
+              alarmController.State() != AlarmController::AlarmState::Alerting &&
+              alarmController2.State() != AlarmController2::AlarmState::Alerting) {
             // if sleeping, we can't send a chime to displayApp yet (SPI flash switched off)
             // request running first and repush the chime message
             if (state == SystemTaskState::Sleeping) {

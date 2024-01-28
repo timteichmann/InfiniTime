@@ -1,0 +1,83 @@
+/*  Copyright (C) 2021 mruss77, Florian
+    Copyright (C) 2024 Tim
+
+    This file is part of InfiniTime.
+
+    InfiniTime is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    InfiniTime is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+#pragma once
+
+#include "displayapp/apps/Apps.h"
+#include "components/settings/Settings.h"
+#include "displayapp/screens/Screen.h"
+#include "displayapp/widgets/Counter.h"
+#include "displayapp/Controllers.h"
+#include "Symbols.h"
+
+namespace Pinetime {
+  namespace Applications {
+    namespace Screens {
+      class Alarm2 : public Screen {
+      public:
+        explicit Alarm2(Controllers::AlarmController2& alarmController2,
+                       Controllers::Settings::ClockType clockType,
+                       System::SystemTask& systemTask,
+                       Controllers::MotorController& motorController);
+        ~Alarm2() override;
+        void SetAlerting();
+        void OnButtonEvent(lv_obj_t* obj, lv_event_t event);
+        bool OnButtonPushed() override;
+        bool OnTouchEvent(TouchEvents event) override;
+        void OnValueChanged();
+        void StopAlerting();
+
+      private:
+        Controllers::AlarmController2& alarmController2;
+        System::SystemTask& systemTask;
+        Controllers::MotorController& motorController;
+
+        lv_obj_t *btnStop, *txtStop, *btnRecur, *txtRecur, *btnInfo, *enableSwitch;
+        lv_obj_t* lblampm = nullptr;
+        lv_obj_t* txtMessage = nullptr;
+        lv_obj_t* btnMessage = nullptr;
+        lv_task_t* taskStopAlarm = nullptr;
+
+        enum class EnableButtonState { On, Off, Alerting };
+        void DisableAlarm();
+        void SetRecurButtonState();
+        void SetSwitchState(lv_anim_enable_t anim);
+        void SetAlarm();
+        void ShowInfo();
+        void HideInfo();
+        void ToggleRecurrence();
+        void UpdateAlarmTime();
+        Widgets::Counter hourCounter = Widgets::Counter(0, 23, jetbrains_mono_76);
+        Widgets::Counter minuteCounter = Widgets::Counter(0, 59, jetbrains_mono_76);
+      };
+    }
+
+    template <>
+    struct AppTraits<Apps::Alarm2> {
+      static constexpr Apps app = Apps::Alarm2;
+      static constexpr const char* icon = Screens::Symbols::userClock;
+
+      static Screens::Screen* Create(AppControllers& controllers) {
+        return new Screens::Alarm2(controllers.alarmController2,
+                                  controllers.settingsController.GetClockType(),
+                                  *controllers.systemTask,
+                                  controllers.motorController);
+      };
+    };
+  }
+}

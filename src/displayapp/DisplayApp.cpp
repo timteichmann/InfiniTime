@@ -4,6 +4,7 @@
 #include "displayapp/screens/Motion.h"
 #include "displayapp/screens/Timer.h"
 #include "displayapp/screens/Alarm.h"
+#include "displayapp/screens/Alarm2.h"
 #include "components/battery/BatteryController.h"
 #include "components/ble/BleController.h"
 #include "components/datetime/DateTimeController.h"
@@ -79,6 +80,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                        Pinetime::Controllers::MotorController& motorController,
                        Pinetime::Controllers::MotionController& motionController,
                        Pinetime::Controllers::AlarmController& alarmController,
+                       Pinetime::Controllers::AlarmController2& alarmController2,
                        Pinetime::Controllers::BrightnessController& brightnessController,
                        Pinetime::Controllers::TouchHandler& touchHandler,
                        Pinetime::Controllers::FS& filesystem)
@@ -94,6 +96,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
     motorController {motorController},
     motionController {motionController},
     alarmController {alarmController},
+    alarmController2 {alarmController2},
     brightnessController {brightnessController},
     touchHandler {touchHandler},
     filesystem {filesystem},
@@ -108,6 +111,7 @@ DisplayApp::DisplayApp(Drivers::St7789& lcd,
                  motorController,
                  motionController,
                  alarmController,
+                 alarmController2,
                  brightnessController,
                  nullptr,
                  filesystem,
@@ -278,6 +282,14 @@ void DisplayApp::Refresh() {
           alarm->SetAlerting();
         } else {
           LoadNewScreen(Apps::Alarm, DisplayApp::FullRefreshDirections::None);
+        }
+        break;
+      case Messages::AlarmTriggered2:
+        if (currentApp == Apps::Alarm2) {
+          auto* alarm2 = static_cast<Screens::Alarm2*>(currentScreen.get());
+          alarm2->SetAlerting();
+        } else {
+          LoadNewScreen(Apps::Alarm2, DisplayApp::FullRefreshDirections::None);
         }
         break;
       case Messages::ShowPairingKey:
